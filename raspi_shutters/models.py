@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-
 class Shutter(models.Model):
     class Meta:
         ordering = ['shutter_name']
@@ -11,7 +10,7 @@ class Shutter(models.Model):
     DIRECTION_DOWN = False
     DIRECTION_CHOICES = (
         (DIRECTION_UP, _("Roll up")),
-        (DIRECTION_DOWN, _("Roll down"))
+        (DIRECTION_DOWN, _("Roll down")),
     )
 
     POSITION_OPENED = "opened"
@@ -25,7 +24,7 @@ class Shutter(models.Model):
     POSITION_ORDERING = {
         POSITION_OPENED: 1,
         POSITION_MIDDLE: 2,
-        POSITION_CLOSED: 3
+        POSITION_CLOSED: 3,
     }
 
     # config
@@ -54,11 +53,14 @@ class Shutter(models.Model):
     )
     target_position = models.CharField(
         verbose_name=_("Target position"),
-        max_length=50, choices=POSITION_CHOICES, default=POSITION_CLOSED
+        max_length=50,
+        choices=POSITION_CHOICES,
+        default=POSITION_CLOSED
     )
     target_position_arrival_time = models.DateTimeField(
         verbose_name=_("Target position arrival time"),
-        null=True, blank=True
+        null=True,
+        blank=True
     )
 
     def get_direction(self):

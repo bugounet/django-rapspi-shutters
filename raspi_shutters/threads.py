@@ -14,12 +14,15 @@ from django.utils.timezone import now
 from raspi_shutters.models import Shutter
 
 logger = getLogger(__name__)
-if not settings.DISABLE_SHUTTERS:
-    from gpiozero import LED
-else:
+if not hasattr(settings, 'DISABLE_SHUTTERS') or settings.DISABLE_SHUTTERS:
     from mock import Mock
     LED = Mock()
-    logger.warning("Shutters are disabled")
+    logger.warning(
+        "Shutters are disabled. Set DISABLE_SHUTTERS to False in "
+        "your django settings file to enable GPIO actions."
+    )
+else:
+    from gpiozero import LED
 
 sleep_event = threading.Event()
 

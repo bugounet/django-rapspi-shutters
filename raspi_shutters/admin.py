@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from raspi_shuttersshutters.models import Shutter
+from raspi_shutters.models import Shutter
 from raspi_shutters.threads import ActuateShutterThread
 
 
