@@ -1,5 +1,8 @@
 from datetime import timedelta
+
 from django.test import TestCase
+
+# Create your tests here.
 from raspi_shutters.models import Shutter
 
 
@@ -8,10 +11,10 @@ class ConfigUtilsTestCase(TestCase):
         # assuming
         config = Shutter(
             target_position=Shutter.POSITION_OPENED,
-            current_position=None,
+            current_position=None
         )
 
-        #when
+        # when
         result = config.get_direction()
 
         # then
@@ -24,7 +27,7 @@ class ConfigUtilsTestCase(TestCase):
             current_position=Shutter.POSITION_MIDDLE,
         )
 
-        #when
+        # when
         result = config.get_direction()
 
         # then
@@ -37,20 +40,20 @@ class ConfigUtilsTestCase(TestCase):
             current_position=Shutter.POSITION_CLOSED,
         )
 
-        #when
+        # when
         result = config.get_direction()
 
         # then
         self.assertEqual(result, Shutter.DIRECTION_DOWN)
 
-    def test_get_direction_with_hight_target(self):
+    def test_get_direction_with_high_target(self):
         # assuming
         config = Shutter(
-            target_position=Shutter.POSITION_CLOSED,
-            current_position=Shutter.POSITION_OPENED,
+            current_position=Shutter.POSITION_CLOSED,
+            target_position=Shutter.POSITION_OPENED,
         )
 
-        #when
+        # when
         result = config.get_direction()
 
         # then
@@ -76,7 +79,10 @@ class ConfigUtilsTestCase(TestCase):
         config = Shutter(
             target_position=Shutter.POSITION_CLOSED,
             current_position=Shutter.POSITION_OPENED,
-            top_from_down_timer=timedelta(seconds=10.5),
+            # This is hell... we're upsidedown
+            opened_from_closed_timer=timedelta(seconds=666),
+            # else it's good
+            closed_from_opened_timer=timedelta(seconds=10.5)
         )
 
         # when

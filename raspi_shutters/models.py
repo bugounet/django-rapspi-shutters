@@ -2,38 +2,37 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-class ShutterConfig(models.Model):
+
+class Shutter(models.Model):
+    class Meta:
+        ordering = ['shutter_name']
+
     DIRECTION_UP = True
     DIRECTION_DOWN = False
     DIRECTION_CHOICES = (
-        (DIRECTION_UP, _("Down")),
-        (DIRECTION_DOWN, _("Down"))
+        (DIRECTION_UP, _("Roll up")),
+        (DIRECTION_DOWN, _("Roll down"))
     )
 
-    POSITION_OPENED = 'opened'
-    POSITION_MIDDLE = 'middle'
-    POSITION_CLOSED = 'closed'
+    POSITION_OPENED = "opened"
+    POSITION_MIDDLE = "middle"
+    POSITION_CLOSED = "closed"
     POSITION_CHOICES = (
         (POSITION_OPENED, _("Opened")),
-        (POSITION_MIDDLE, _("Shadow")),
+        (POSITION_MIDDLE, _("Shadowing")),
         (POSITION_CLOSED, _("Closed")),
     )
     POSITION_ORDERING = {
         POSITION_OPENED: 1,
         POSITION_MIDDLE: 2,
-        POSITION_CLOSED: 3,
+        POSITION_CLOSED: 3
     }
-
 
     # config
     shutter_name = models.CharField(max_length=100)
     upside_down = models.BooleanField()
-    power_output_adress = models.PositiveSmallIntegerField(
-        unique=True
-    )
-    direction_selector_adress = models.PositiveSmallIntegerField(
-        unique=True
-    )
+    power_output_adress = models.PositiveSmallIntegerField(unique=True)
+    direction_selector_adress = models.PositiveSmallIntegerField(unique=True)
     opened_from_middle_timer = models.DurationField()
     opened_from_closed_timer = models.DurationField()
     middle_from_opened_timer = models.DurationField()
@@ -42,24 +41,25 @@ class ShutterConfig(models.Model):
     closed_from_opened_timer = models.DurationField()
 
     # usage
-    running = models.BooleanField()
+    running = models.BooleanField(
+        verbose_name=_("Running"),
+    )
     current_position = models.CharField(
         max_length=50,
+        verbose_name=_("Current position"),
         choices=POSITION_CHOICES,
         null=True,
         blank=True,
         default=None
     )
     target_position = models.CharField(
-        max_length=50,
-        choices=POSITION_CHOICES,
-        default=POSITION_CLOSED
+        verbose_name=_("Target position"),
+        max_length=50, choices=POSITION_CHOICES, default=POSITION_CLOSED
     )
     target_position_arrival_time = models.DateTimeField(
-        null=True,
-        blank=True
+        verbose_name=_("Target position arrival time"),
+        null=True, blank=True
     )
-
 
     def get_direction(self):
         if self.current_position is None:
@@ -72,6 +72,9 @@ class ShutterConfig(models.Model):
             return self.DIRECTION_UP
         else:
             return self.DIRECTION_DOWN
+
+    def get_direction_display(self):
+        return dict(self.DIRECTION_CHOICES)[self.get_direction()]
 
     def get_transit_duration(self):
         # technically, opening a shutter is longer than closing it. This is
@@ -92,9 +95,13 @@ class ShutterConfig(models.Model):
             (self.POSITION_CLOSED, self.POSITION_OPENED):
                 self.opened_from_closed_timer,
             (self.POSITION_CLOSED, self.POSITION_MIDDLE):
-                self.opened_from_middle_timer,
+                self.middle_from_closed_timer,
         }
         return TIMETABLE.get(
-            (self.current_position, self.target_position),
-            DEFAULT_SUM
+            (self.current_position, self.target_position), DEFAULT_SUM
+        )
+
+    def __str__(self):
+        return "Shutter '{name}' ({id})".format(
+            name=self.shutter_name, id=self.id
         )

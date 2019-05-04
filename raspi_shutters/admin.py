@@ -1,48 +1,41 @@
-import threading
-
 from django.contrib import admin
 
 # Register your models here.
-from raspi_shutters.models import ShutterConfig
-from raspi_shutters.tasks import actuate_shutter
+from raspi_shuttersshutters.models import Shutter
+from raspi_shutters.threads import ActuateShutterThread
 
 
-@admin.register(ShutterConfig)
-class ShutterConfigAdmin(admin.ModelAdmin):
-    model = ShutterConfig
+@admin.register(Shutter)
+class ShutterAdmin(admin.ModelAdmin):
+    model = Shutter
 
-    list_display = ('shutter_name', 'running', 'current_position', 'target_position')
-
-    actions = (
-        'actuate_shutter_to_opened',
-        'actuate_shutter_to_middle',
-        'actuate_shutter_to_closed',
+    list_display = (
+        "shutter_name",
+        "running",
+        "current_position",
+        "target_position"
     )
 
-    @staticmethod
-    def actuate_shutter_to_opened(request, queryset):
-        for shutter in queryset.all():
-            def open_shutter():
-                actuate_shutter(shutter, ShutterConfig.POSITION_OPENED)
-            action = threading.Thread(target=open_shutter)
-            action.start()
+    actions = (
+        "actuate_shutter_to_opened",
+        "actuate_shutter_to_middle",
+        "actuate_shutter_to_closed",
+    )
 
-    @staticmethod
-    def actuate_shutter_to_middle(request, queryset):
-        for shutter in queryset.all():
-            def midway_shutter():
-                actuate_shutter(shutter, ShutterConfig.POSITION_MIDDLE)
-            action = threading.Thread(target=midway_shutter)
-            action.start()
+    def actuate_shutter_to_opened(self, request, queryset):
+        shutter_ids = queryset.all().values_list("id", flat=True)
+        ActuateShutterThread(
+            args=(shutter_ids, Shutter.POSITION_OPENED)
+        ).start()
 
-    @staticmethod
-    def actuate_shutter_to_closed(request, queryset):
-        for shutter in queryset.all():
-            def close_shutter():
-                try:
-                    actuate_shutter(shutter, ShutterConfig.POSITION_CLOSED)
-                except
-                    request
+    def actuate_shutter_to_middle(self, request, queryset):
+        shutter_ids = queryset.all().values_list("id", flat=True)
+        ActuateShutterThread(
+            args=(shutter_ids, Shutter.POSITION_MIDDLE)
+        ).start()
 
-            action = threading.Thread(target=close_shutter)
-            action.start()
+    def actuate_shutter_to_closed(self, request, queryset):
+        shutter_ids = queryset.all().values_list("id", flat=True)
+        ActuateShutterThread(
+            args=(shutter_ids, Shutter.POSITION_CLOSED)
+        ).start()
