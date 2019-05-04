@@ -15,6 +15,7 @@ INSTALLED_APPS=[
 To wire up the thing, you'll need to connect GPIO outputs to a set of relays. You need to use 2 relays per shutter so that you have 1 relay to select shutter phase wire to power-up and another relay to connect phase to the second relay input.
 
 For better explanation, see below diagram:
+
 ![Wiring diagram](documentation/wiring.jpg)
 
 In case powerpinout is upside-down on all your relays, you can use the `GPIO_POWER_PINOUT_INVERTED` boolean setting to request inverted GPIO levels on power-relays.
