@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from raspi_shutters.models import Shutter
 from raspi_shutters.serializer import ShutterSerializer, ActuationSerializer
-from raspi_shutters.threads import ActuateShutterThread
+from raspi_shutters.threads import ActuateShutterThread, force_stop_shutter
 
 
 class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
@@ -68,8 +68,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(moving_shutters, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'],
-            permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def actuate(self, request, pk=None):
         """ Execute a given  action on a shutter
 
@@ -114,3 +113,11 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
             "target_position_arrival_time":
                 shutter.target_position_arrival_time,
         })
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def force_stop(self, request, pk=None):
+        shutter = self.get_object()
+
+        force_stop_shutter(shutter)
+
+        return self.get_serializer(shutter)

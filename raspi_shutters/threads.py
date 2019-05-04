@@ -27,6 +27,10 @@ else:
 sleep_event = threading.Event()
 
 
+def are_power_pins_inverted():
+    return getattr(settings, "GPIO_POWER_PINOUT_INVERTED", False)
+
+
 class ActuateShutterThread(threading.Thread):
     def __init__(self, *args, **kwargs):
         super(ActuateShutterThread, self).__init__(*args, **kwargs)
@@ -93,7 +97,10 @@ class ActuateShutterThread(threading.Thread):
         # turn them on
         for shutter_id, ports in gpio_ports_mapping.items():
             logger.info("Start shutter %s", shutter_id)
-            ports[0].off()
+            if are_power_pins_inverted():
+                ports[0].off()
+            else:
+                ports[0].on()
 
     @staticmethod
     def phase_3_stop_motors_on_time(timing_mapping, gpio_ports_mapping):
@@ -108,7 +115,10 @@ class ActuateShutterThread(threading.Thread):
             sleep_event.wait(timeout=delta)
             # stop them all
             for shutter_id in timing_mapping[time_step]:
-                gpio_ports_mapping[shutter_id][0].on()
+                if are_power_pins_inverted():
+                    gpio_ports_mapping[shutter_id][0].on()
+                else:
+                    gpio_ports_mapping[shutter_id][0].off()
                 logger.info("shutter {} stopped.".format(shutter_id))
 
     @staticmethod
@@ -136,7 +146,10 @@ class ActuateShutterThread(threading.Thread):
         # then pause to let relays take their position. When
         # everything's done, we'll set-direction, pause for the relay
         # and turn the shutter on.
-        ports[0].on()
+        if are_power_pins_inverted():
+            ports[0].on()
+        else:
+            ports[0].off()
         sleep(0.05)
 
         # setup direction then wait for relay
@@ -170,7 +183,10 @@ class ActuateShutterThread(threading.Thread):
 
 def force_stop_shutter(shutter):
     logger.info("Forcing shutter {} stop.".format(shutter.id))
-    LED(shutter.power_output_adress).on()
+    if are_power_pins_inverted():
+        LED(shutter.power_output_adress).on()
+    else:
+        LED(shutter.power_output_adress).off()
     shutter.running = False
     shutter.save(update_fields=["running"])
     logger.info("Shutter force stopped.")
