@@ -19,7 +19,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Shutter.objects.all()
     permission_classes = (IsAuthenticated, )
 
-    @action(detail=False, methods=['post', 'get'],
+    @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
             serializer_class=ActuationSerializer)
     def all(self, request):
@@ -71,7 +71,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
     @action(
-        detail=True, methods=['post', 'get'],
+        detail=True, methods=['post'],
         permission_classes=[IsAuthenticated],
         serializer_class=ActuationSerializer,
         url_path='actuate')
