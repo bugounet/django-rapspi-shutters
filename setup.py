@@ -9,6 +9,7 @@ setup(
         'RPi.GPIO',
         'gpiozero',
         'django-rest-framework',
+        'mock',
     ],
     license='Do what you want',
     author="Sullivan MATAS",
