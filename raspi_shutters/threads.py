@@ -58,7 +58,7 @@ class ActuateShutterThread(threading.Thread):
         self.phase_3_stop_motors_on_time(timing_mapping, gpio_ports_mapping)
 
         with transaction.atomic():
-            self.phse_4_save_new_status_in_DB(
+            self.phase_4_save_new_status_in_DB(
                 shutters, target_position, gpio_ports_mapping
             )
         logger.info("DB updated & locks released")

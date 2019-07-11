@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import status, viewsets
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,13 +20,14 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated, )
 
     @action(detail=False, methods=['post'],
-            permission_classes=[IsAuthenticated])
+            permission_classes=[IsAuthenticated],
+            serializer_class=ActuationSerializer)
     def all(self, request):
         """ Execute a given action on all connected shutters
 
         :param target_position: Requested position to reach
         """
-        serializer = ActuationSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(
@@ -58,24 +60,26 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
           )
         shutters = moved_shutters_list.values_list('id', flat=True)
         ActuateShutterThread(args=(shutters, target_position)).start()
+        return Response(results, status=status.HTTP_202_ACCEPTED)
 
     @all.mapping.get
     def list_all_running_shutters(self):
         """ List running shutters
         """
         moving_shutters = Shutter.objects.filter(running=True)
-
         serializer = self.get_serializer(moving_shutters, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=True, methods=['post'], permission_classes=[IsAuthenticated],
+        serializer_class=ActuationSerializer)
     def actuate(self, request, pk=None):
         """ Execute a given  action on a shutter
 
         :param target_position: Requested position to reach
         """
         shutter = self.get_object()
-        serializer = ActuationSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         
         if not serializer.is_valid():
             return Response(
@@ -114,10 +118,13 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
                 shutter.target_position_arrival_time,
         })
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=True, methods=['post'], permission_classes=[IsAuthenticated],
+        serializer_class=serializers.Serializer)
     def force_stop(self, request, pk=None):
         shutter = self.get_object()
-
         force_stop_shutter(shutter)
-
-        return self.get_serializer(shutter, many=False).data
+        return Response(
+            ShutterSerializer(shutter, many=False).data,
+            status=status.HTTP_200_OK
+        )
