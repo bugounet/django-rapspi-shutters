@@ -120,4 +120,4 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
 
         force_stop_shutter(shutter)
 
-        return self.get_serializer(shutter)
+        return self.get_serializer(shutter, many=False).data
