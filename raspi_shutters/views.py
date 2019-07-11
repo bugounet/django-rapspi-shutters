@@ -19,7 +19,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Shutter.objects.all()
     permission_classes = (IsAuthenticated, )
 
-    @action(detail=False, methods=['post'],
+    @action(detail=False, methods=['post', 'get'],
             permission_classes=[IsAuthenticated],
             serializer_class=ActuationSerializer)
     def all(self, request):
@@ -71,8 +71,10 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
     @action(
-        detail=True, methods=['post'], permission_classes=[IsAuthenticated],
-        serializer_class=ActuationSerializer)
+        detail=True, methods=['post', 'get'],
+        permission_classes=[IsAuthenticated],
+        serializer_class=ActuationSerializer,
+        url_path='actuate')
     def actuate(self, request, pk=None):
         """ Execute a given  action on a shutter
 
@@ -120,7 +122,8 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(
         detail=True, methods=['post'], permission_classes=[IsAuthenticated],
-        serializer_class=serializers.Serializer)
+        serializer_class=serializers.Serializer,
+        url_path='force-stop')
     def force_stop(self, request, pk=None):
         shutter = self.get_object()
         force_stop_shutter(shutter)
