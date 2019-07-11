@@ -5,6 +5,11 @@ setup(
     name='Django RaspiShutters',
     version='1.0',
     packages=['raspi_shutters',],
+    install_requires=[
+        'RPi.GPIO',
+        'gpiozero',
+        'django-rest-framework',
+    ],
     license='Do what you want',
     author="Sullivan MATAS",
     author_email="sullivan@matas.pro",
