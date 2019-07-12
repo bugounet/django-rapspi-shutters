@@ -21,8 +21,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
-            serializer_class=ActuationSerializer,
-            url_path='actuate/all')
+            serializer_class=ActuationSerializer)
     def all(self, request):
         """ Execute a given action on all connected shutters
 
@@ -36,17 +35,11 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         target_position = serializer.data['target_position']
-        shutters_list = serializer.data['shutters']
 
         results = []
         moved_shutters_list = Shutter.objects.exclude(
               current_position=target_position
         )
-        if shutters_list:
-            moved_shutters_list = moved_shutters_list.filter(
-                id__in=shutters_list
-            )
-
         for shutter in moved_shutters_list:
           if shutter.running:
               return Response(
