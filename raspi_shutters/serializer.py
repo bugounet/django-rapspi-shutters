@@ -13,3 +13,4 @@ class ShutterSerializer(serializers.ModelSerializer):
 
 class ActuationSerializer(serializers.Serializer):
     target_position = serializers.ChoiceField(Shutter.POSITION_CHOICES)
+    shutters = serializers.ListField(blank=True)
