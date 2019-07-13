@@ -21,49 +21,61 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
-            serializer_class=ActuationSerializer)
-    def all(self, request):
-        """ Execute a given action on all connected shutters
+            serializer_class=ActuationSerializer,
+            url_path='actuate')
+    def actuate_list(self, request):
+        """ Execute a given action on given list of connected shutters
+
+        If list not provided, all shutters are actuated.
 
         :param target_position: Requested position to reach
         """
         serializer = self.get_serializer(data=request.data)
-
         if not serializer.is_valid():
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
         target_position = serializer.data['target_position']
+        explicit_shutters_list = serializer.data.get('shutters', [])
+
+        moved_shutters_list = Shutter.objects.exclude(
+            current_position=target_position
+        )
+        if explicit_shutters_list:
+            moved_shutters_list = moved_shutters_list.filter(
+                id__in=explicit_shutters_list
+            )
 
         results = []
-        moved_shutters_list = Shutter.objects.exclude(
-              current_position=target_position
-        )
         for shutter in moved_shutters_list:
-          if shutter.running:
-              return Response(
-                  {'error': _("Shutter {} is busy").format(shutter.id)},
-                  status=status.HTTP_400_BAD_REQUEST
-              )
+            if shutter.running:
+                return Response(
+                    {'error': _("Shutter {} is busy").format(shutter.id)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-          shutter.target_position = target_position
-          time = shutter.get_transit_duration()
-          results.append(
-              {
-                  "id": shutter.id,
-                  "transit_duration": time.total_seconds(),
-                  "target_position_arrival_time":
-                      shutter.target_position_arrival_time,
-                  "running": True,
-              }
-          )
+            shutter.target_position = target_position
+            time = shutter.get_transit_duration()
+            results.append(
+                {
+                    "id": shutter.id,
+                    "transit_duration": time.total_seconds(),
+                    "target_position_arrival_time":
+                        shutter.target_position_arrival_time,
+                    "running": True,
+                }
+            )
+
         shutters = moved_shutters_list.values_list('id', flat=True)
         ActuateShutterThread(args=(shutters, target_position)).start()
         return Response(results, status=status.HTTP_202_ACCEPTED)
 
-    @all.mapping.get
-    def list_all_running_shutters(self):
+    @action(
+        detail=False, methods=['get'],
+        permission_classes=[IsAuthenticated],
+        url_path='running')
+    def list_all_running_shutters(self, request):
         """ List running shutters
         """
         moving_shutters = Shutter.objects.filter(running=True)
@@ -82,7 +94,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
         """
         shutter = self.get_object()
         serializer = self.get_serializer(data=request.data)
-        
+
         if not serializer.is_valid():
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
@@ -105,19 +117,6 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
             "target_position_arrival_time":
                 shutter.target_position_arrival_time,
             "running": True,
-        })
-
-    @actuate.mapping.get
-    def list_running_shutters(self, request, pk=None):
-        """ Ask the API if given shutter is running
-        """
-        shutter = self.get_object()
-
-        return Response({
-            "id": shutter.id,
-            "running": shutter.running,
-            "target_position_arrival_time":
-                shutter.target_position_arrival_time,
         })
 
     @action(
