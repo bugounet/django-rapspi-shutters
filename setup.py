@@ -10,7 +10,7 @@ setup(
         'gpiozero',
         'django-rest-framework',
         'mock',
-        'django-filters',
+        'django-filter',
     ],
     license='Do what you want',
     author="Sullivan MATAS",
