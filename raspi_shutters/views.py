@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+import django_filters.rest_framework
 
 from rest_framework import status, viewsets
 from rest_framework import serializers
@@ -18,6 +19,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ShutterSerializer
     queryset = Shutter.objects.all()
     permission_classes = (IsAuthenticated, )
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
