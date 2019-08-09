@@ -20,6 +20,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Shutter.objects.all()
     permission_classes = (IsAuthenticated, )
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['running', 'current_position', 'target_position', 'id']
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
