@@ -51,6 +51,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         results = []
+        shutter_ids = moved_shutters_list.values_list('id', flat=True)
         for shutter in moved_shutters_list:
             if shutter.running:
                 return Response(
@@ -70,8 +71,7 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
                 }
             )
 
-        shutters = moved_shutters_list.values_list('id', flat=True)
-        ActuateShutterThread(args=(shutters, target_position)).start()
+        ActuateShutterThread(args=(shutter_ids, target_position)).start()
         return Response(results, status=status.HTTP_202_ACCEPTED)
 
     @action(
@@ -110,6 +110,14 @@ class ShutterViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': _("Shutter {} is busy").format(shutter.id)},
                 status=status.HTTP_409_CONFLICT
             )
+
+        if shutter.current_position == target_position:
+            return Response({
+                "id": shutter.id,
+                "transit_duration": 0,
+                "target_position_arrival_time": None,
+                "running": False,
+            })
 
         shutter.target_position = target_position
         time = shutter.get_transit_duration()
